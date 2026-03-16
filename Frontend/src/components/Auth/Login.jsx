@@ -1,5 +1,5 @@
 import { LogIn } from "lucide-react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
     const navigate = useNavigate();

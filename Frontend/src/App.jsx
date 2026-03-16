@@ -1,16 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Signup } from "./components/Auth/Signup";
+import { MainLayout } from "./components/Layout/MainLayout";
+import Login from './components/Auth/Login'
 
-function App() {
-  const [count, setCount] = useState(0)
 
+export default function App() {
   return (
-    <>
-    <h1>LeadFlow-CRM-Lead-Management-System</h1>
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        {/* <Route element={<MainLayout />}>
+          <Route path="/" element={<Dashboard />} />
+        </Route> */}
+      </Routes>
+    </BrowserRouter>
+  );
 }
-
-export default App

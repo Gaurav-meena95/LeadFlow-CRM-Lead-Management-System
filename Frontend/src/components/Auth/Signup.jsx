@@ -1,12 +1,37 @@
 import { UserPlus } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../../lib/api";
 
 export function Signup() {
     const navigate = useNavigate();
 
-    const handleSignup = (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
-        navigate("/");
+        try {
+            const firstName = e.target.firstName.value;
+            const lastName = e.target.lastName.value;
+            const email = e.target.email.value;
+            const phone = e.target.phone.value;
+            const role = e.target.role.value;
+            const password = e.target.password.value;
+            
+            const response = await api.post('/auth/signup', {
+                name: `${firstName} ${lastName}`,
+                email,
+                phone,
+                password,
+                role
+            });
+            
+            localStorage.setItem('token', response.data.accessToken);
+            localStorage.setItem('refreshToken', response.data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(response.data));
+            
+            navigate("/");
+        } catch (error) {
+            console.error(error);
+            alert("Signup failed. Check console.");
+        }
     };
 
     return (
@@ -43,17 +68,25 @@ export function Signup() {
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
-                            <div className="mt-1">
-                                <input id="email" name="email" type="email" autoComplete="email" required className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
+                                <div className="mt-1">
+                                    <input id="email" name="email" type="email" autoComplete="email" required className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors" />
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                                <div className="mt-1">
+                                    <input id="phone" name="phone" type="tel" required className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors" />
+                                </div>
                             </div>
                         </div>
 
                         <div>
                             <label htmlFor="role" className="block text-sm font-medium text-gray-700">Account Role</label>
                             <div className="mt-1">
-                                <select id="role" name="role" required className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white">
+                                <select id="role" name="role" required defaultValue="admin" className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white">
                                     <option value="">Select a role...</option>
                                     <option value="admin">Super Admin</option>
                                     <option value="manager">Manager</option>

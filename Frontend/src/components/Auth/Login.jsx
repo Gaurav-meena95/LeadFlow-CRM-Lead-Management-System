@@ -1,12 +1,32 @@
 import { LogIn } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../../lib/api";
 
 function Login() {
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        navigate("/");
+        try {
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            // role hardcoded to admin or prompt from UI? The model needs identifier, password and role for login based on controller.
+            
+            const response = await api.post('/auth/login', {
+                identifier: email,
+                password,
+                role: 'admin' // Temporarily hardcoded for testing based on Signup options
+            });
+            
+            localStorage.setItem('token', response.data.accessToken);
+            localStorage.setItem('refreshToken', response.data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(response.data));
+            
+            navigate("/");
+        } catch (error) {
+            console.error(error);
+            alert("Login failed. Check console.");
+        }
     };
 
     return (

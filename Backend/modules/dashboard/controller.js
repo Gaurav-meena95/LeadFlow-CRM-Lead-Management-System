@@ -35,7 +35,7 @@ const getDashboard = async (req, res) => {
     const agentStats = await Lead.aggregate([
       { $group: { _id: '$assignedAgent', total: { $sum: 1 }, booked: { $sum: { $cond: [{ $eq: ['$status', 'booked'] }, 1, 0] } } } },
       { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'agent' } },
-      { $unwind: { path: '$agent', preserveNullAndEmpty: true } },
+      { $unwind: { path: '$agent', preserveNullAndEmptyArrays: true } },
       { $project: { _id: 1, total: 1, booked: 1, name: '$agent.name', email: '$agent.email' } }
     ]);
 

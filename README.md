@@ -2,6 +2,9 @@
 
 A full-stack Lead Management System built with the MERN stack. Designed for real estate teams to manage leads, track visits, and monitor the sales pipeline with role-based access control.
 
+**Live Frontend**: https://lead-flow-crm-lead-management-syste.vercel.app  
+**Live Backend**: https://leadflow-crm-lead-management-system.onrender.com
+
 ---
 
 ## Tech Stack

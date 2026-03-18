@@ -1,75 +1,104 @@
-const User = require('./model');
-const generateTokens = require('../../utils/generateToken');
-const jwt = require('jsonwebtoken');
+const { validationInput } = require("../../utils/utils")
+const User = require('./model')
+const sec_key = process.env.sec_key
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const signup = async (req, res) => {
     try {
-        const { name, email, phone, password, role } = req.body;
-        const userExists = await User.findOne({ $or: [{ email }, { phone }] });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
+        const { name, email, phone, password, role } = req.body
+
+        const value = validationInput({ name, email, phone, password, role })
+        if (value) {
+            return res.status(403).json({ message: `Check missing value ${value}` })
         }
-        const user = await User.create({ name, email, phone, password, role });
-        const tokens = generateTokens(user);
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            role: user.role,
-            ...tokens
-        });
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(401).json({ message: "Invalid Email Address" })
+        }
+
+        if (!/^\d{10}$/.test(phone)) {
+            return res.status(400).json({ message: "Phone number must be exactly 10 digits" })
+        }
+
+        if (!/(?=.*[!@#$%^&*])(?=.{8,})/.test(password)) {
+            return res.status(400).json({ message: "Password must be at least 8 characters long and contain one special character" })
+        }
+
+        const existing = await User.findOne({
+            $or: [{ email }, { phone }]
+        })
+
+        if (existing) {
+            return res.status(400).json({ message: 'User already exists' })
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        const newUser = await User.create({
+            name,
+            email,
+            phone,
+            password: hashedPassword,
+            role
+        })
+
+        return res.status(201).json({
+            message: 'Signup successful',
+            user: newUser
+        })
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.log(error)
+        return res.status(500).json({ msg: "Internal Server Error" })
     }
-};
+}
+
 
 const login = async (req, res) => {
     try {
-        const { identifier, password, role } = req.body;
-        const user = await User.findOne({
-            $or: [{ email: identifier }, { phone: identifier }],
-            role
-        });
-        if (user && (await user.matchPassword(password))) {
-            const tokens = generateTokens(user);
-            res.status(200).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                role: user.role,
-                ...tokens
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid credentials or role' });
+        const { email, password, role } = req.body
+
+        const value = validationInput({ email, password, role })
+        if (value) {
+            return res.status(403).json({ message: `Check missing value ${value}` })
         }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
 
-const getMe = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id).select('-password');
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
+        existing = await User.findOne({ email: email, role })
 
-const refreshToken = async (req, res) => {
-    try {
-        const { token } = req.body;
-        if (!token) return res.status(401).json({ message: 'No refresh token' });
-        const decoded = jwt.verify(token, process.env.sec_key);
-        const user = await User.findById(decoded.id);
-        if (!user) return res.status(401).json({ message: 'Invalid token' });
-        const tokens = generateTokens(user);
-        res.status(200).json(tokens);
-    } catch (error) {
-        res.status(401).json({ message: 'Invalid refresh token' });
-    }
-};
+        if (!existing) {
+            return res.status(404).json({ message: "User not found or check role" })
+        }
 
-module.exports = { signup, login, getMe, refreshToken };
+        const isPasswordMatch = await bcrypt.compare(password, existing.password)
+
+        if (!isPasswordMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' })
+        }
+
+        const jwtToken = jwt.sign(
+            { id: existing._id, email: existing.email, role: existing.role },
+            sec_key,
+            { expiresIn: '1h' }
+        )
+
+        const refreshToken = jwt.sign(
+            { id: existing._id, email: existing.email, role: existing.role },
+            sec_key,
+            { expiresIn: '7d' }
+        )
+
+        return res.status(200).json({
+            message: "Login Successfully",
+            user: existing,
+            token: jwtToken,
+            refreshToken
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: 'Login Failed', error: error.message })
+    }
+}
+
+module.exports = { signup, login }

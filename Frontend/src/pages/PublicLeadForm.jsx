@@ -84,6 +84,7 @@ export default function PublicLeadForm() {
                 <option value="website">Website</option>
                 <option value="facebook">Facebook</option>
                 <option value="whatsapp">WhatsApp</option>
+                <option value="call">Call</option>
                 <option value="referral">Referral</option>
               </select>
             </div>

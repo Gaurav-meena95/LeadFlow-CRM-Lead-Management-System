@@ -79,6 +79,7 @@ export default function LeadFormModal({ onClose, onCreated }) {
               <option value="website">Website</option>
               <option value="facebook">Facebook</option>
               <option value="whatsapp">WhatsApp</option>
+              <option value="call">Call</option>
               <option value="referral">Referral</option>
             </select>
           </div>
@@ -100,9 +101,7 @@ export default function LeadFormModal({ onClose, onCreated }) {
                 onChange={(e) => setForm({ ...form, assignedAgent: e.target.value })}
               >
                 <option value="">Auto assign</option>
-                {agents.map((a) => (
-                  <option key={a._id} value={a._id}>{a.name}</option>
-                ))}
+                {agents.map((a) => <option key={a._id} value={a._id}>{a.name}</option>)}
               </select>
             </div>
           )}

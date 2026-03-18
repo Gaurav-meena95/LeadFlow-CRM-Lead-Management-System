@@ -3,12 +3,19 @@ const Lead = require('../leads/model');
 
 const createVisit = async (req, res) => {
   try {
-    const { leadId, property, scheduledAt, agent, notes } = req.body;
-    if (!leadId || !property || !scheduledAt || !agent) {
-      return res.status(400).json({ message: 'leadId, property, scheduledAt and agent are required' });
+    const { leadId, propertyName, propertyLocation, scheduledAt, agent, notes } = req.body;
+    if (!leadId || !propertyName || !scheduledAt || !agent) {
+      return res.status(400).json({ message: 'leadId, propertyName, scheduledAt and agent are required' });
     }
-    const visit = await Visit.create({ leadId, property, scheduledAt, agent, notes });
-    await Lead.findByIdAndUpdate(leadId, { status: 'visit_scheduled', lastActivityAt: new Date() });
+    const visit = await Visit.create({ leadId, propertyName, propertyLocation, scheduledAt, agent, notes });
+    const lead = await Lead.findById(leadId);
+    if (lead) {
+      lead.status = 'visit_scheduled';
+      lead.lastActivityAt = new Date();
+      lead.followUpRequired = false;
+      lead.activity.push({ type: 'visit_scheduled', metadata: { propertyName, scheduledAt } });
+      await lead.save();
+    }
     const populated = await Visit.findById(visit._id)
       .populate('leadId', 'name phone')
       .populate('agent', 'name email');
@@ -42,13 +49,17 @@ const updateVisit = async (req, res) => {
     if (!visit) return res.status(404).json({ message: 'Visit not found' });
     const allowedStatuses = ['scheduled', 'completed', 'cancelled'];
     if (status) {
-      if (!allowedStatuses.includes(status)) {
-        return res.status(400).json({ message: 'Invalid status' });
-      }
+      if (!allowedStatuses.includes(status)) return res.status(400).json({ message: 'Invalid status' });
       visit.status = status;
       if (status === 'completed') {
-        const leadStatus = leadOutcome === 'booked' ? 'booked' : 'visit_done';
-        await Lead.findByIdAndUpdate(visit.leadId, { status: leadStatus, lastActivityAt: new Date() });
+        const leadStatus = leadOutcome === 'booked' ? 'booked' : 'visit_completed';
+        const lead = await Lead.findById(visit.leadId);
+        if (lead) {
+          lead.activity.push({ type: 'status_change', metadata: { from: lead.status, to: leadStatus } });
+          lead.status = leadStatus;
+          lead.lastActivityAt = new Date();
+          await lead.save();
+        }
       }
     }
     if (notes !== undefined) visit.notes = notes;

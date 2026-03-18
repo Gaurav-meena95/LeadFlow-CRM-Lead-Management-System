@@ -4,20 +4,26 @@ import api from '../services/api';
 
 export default function VisitModal({ lead, onClose, onCreated }) {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-  const [form, setForm] = useState({ property: lead?.property || '', scheduledAt: '', notes: '' });
+  const [form, setForm] = useState({
+    propertyName: lead?.property || '',
+    propertyLocation: '',
+    scheduledAt: '',
+    notes: ''
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.property.trim()) return setError('Property is required');
+    if (!form.propertyName.trim()) return setError('Property name is required');
     if (!form.scheduledAt) return setError('Date and time is required');
     setLoading(true);
     setError('');
     try {
       const res = await api.post('/api/visits', {
         leadId: lead._id,
-        property: form.property,
+        propertyName: form.propertyName,
+        propertyLocation: form.propertyLocation,
         scheduledAt: form.scheduledAt,
         agent: lead.assignedAgent?._id || user._id,
         notes: form.notes
@@ -31,7 +37,7 @@ export default function VisitModal({ lead, onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl w-full max-w-md shadow-xl">
         <div className="flex items-center justify-between p-5 border-b border-slate-200">
           <h2 className="text-lg font-semibold">Schedule Visit</h2>
@@ -40,12 +46,21 @@ export default function VisitModal({ lead, onClose, onCreated }) {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{error}</p>}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Property</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Property Name</label>
             <input
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={form.property}
-              onChange={(e) => setForm({ ...form, property: e.target.value })}
-              placeholder="Property name"
+              value={form.propertyName}
+              onChange={(e) => setForm({ ...form, propertyName: e.target.value })}
+              placeholder="e.g. Sunrise Apartments"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Property Location</label>
+            <input
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={form.propertyLocation}
+              onChange={(e) => setForm({ ...form, propertyLocation: e.target.value })}
+              placeholder="e.g. Sector 62, Noida"
             />
           </div>
           <div>

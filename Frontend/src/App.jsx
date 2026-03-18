@@ -1,27 +1,48 @@
-import { Routes, Route } from "react-router-dom";
-import { Signup } from "./components/Auth/Signup";
-import { MainLayout } from "./components/Layout/MainLayout";
-import Login from './components/Auth/Login'
-import { Dashboard } from "./components/Pages/Dashboard";
-import { Leads } from "./components/Pages/Leads";
-import { Pipeline } from "./components/Pages/Pipeline";
-import { Agents } from "./components/Pages/Agents";
-import { Settings } from "./components/Pages/Setting";
-import { Visits } from "./components/Pages/Visits";
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home';
+import PublicLeadForm from './pages/PublicLeadForm';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Leads from './pages/Leads';
+import Pipeline from './pages/Pipeline';
+import Visits from './pages/Visits';
+import Agents from './pages/Agents';
+import Settings from './pages/Settings';
+import Sidebar from './components/Sidebar';
+import Navbar from './components/Navbar';
+
+const ProtectedLayout = ({ children, adminOnly }) => {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!token || !user) return <Navigate to="/login" replace />;
+  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  return (
+    <div className="flex h-screen bg-slate-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar />
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
+    </div>
+  );
+};
 
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/lead" element={<PublicLeadForm />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/leads" element={<Leads />} />
-        <Route path="/pipeline" element={<Pipeline />} />
-        <Route path="/agents" element={<Agents />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/visits" element={<Visits />} />
-      </Route>
+      <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+      <Route path="/leads" element={<ProtectedLayout><Leads /></ProtectedLayout>} />
+      <Route path="/pipeline" element={<ProtectedLayout><Pipeline /></ProtectedLayout>} />
+      <Route path="/visits" element={<ProtectedLayout><Visits /></ProtectedLayout>} />
+      <Route path="/agents" element={<ProtectedLayout adminOnly><Agents /></ProtectedLayout>} />
+      <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -61,7 +61,7 @@ export default function Dashboard() {
                     <p className="text-xs text-slate-500">{lead.phone} · {lead.source}</p>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[lead.status]}`}>
-                    {lead.status.replace('_', ' ')}
+                    {lead.status.replace(/_/g, ' ')}
                   </span>
                 </div>
               ))}

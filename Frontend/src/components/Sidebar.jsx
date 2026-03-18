@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, GitBranch, Calendar, UserCog, Settings, LogOut, Menu, X, Building2
+  LayoutDashboard, Users, GitBranch, Calendar,
+  UserCog, Settings, LogOut, Menu, X, Building2
 } from 'lucide-react';
 
 const links = [
@@ -9,7 +10,7 @@ const links = [
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/pipeline', label: 'Pipeline', icon: GitBranch },
   { to: '/visits', label: 'Visits', icon: Calendar },
-  { to: '/agents', label: 'Agents', icon: UserCog, adminOnly: true },
+  { to: '/agents', label: 'Agents', icon: UserCog, roles: ['admin'] },
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 
@@ -38,8 +39,8 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-2">
-        {links.map(({ to, label, icon: Icon, adminOnly }) => {
-          if (adminOnly && user?.role !== 'admin') return null;
+        {links.map(({ to, label, icon: Icon, roles }) => {
+          if (roles && !roles.includes(user?.role)) return null;
           return (
             <NavLink
               key={to}

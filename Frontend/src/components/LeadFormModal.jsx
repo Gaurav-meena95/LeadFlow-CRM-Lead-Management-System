@@ -3,29 +3,16 @@ import { X } from 'lucide-react';
 import api from '../services/api';
 
 export default function LeadFormModal({ onClose, onCreated }) {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   const [form, setForm] = useState({ name: '', phone: '', source: '', assignedAgent: '', property: '' });
   const [agents, setAgents] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    api.get('/api/leads?source=').then((r) => {
-      const unique = {};
-      r.data.leads.forEach((l) => {
-        if (l.assignedAgent) unique[l.assignedAgent._id] = l.assignedAgent;
-      });
-    });
-    api.get('/api/auth/me').then((r) => {
-      if (r.data.user.role === 'admin' || r.data.user.role === 'manager') {
-        api.get('/api/leads').then((res) => {
-          const map = {};
-          res.data.leads.forEach((l) => {
-            if (l.assignedAgent) map[l.assignedAgent._id] = l.assignedAgent;
-          });
-          setAgents(Object.values(map));
-        });
-      }
-    });
+    if (user?.role === 'admin' || user?.role === 'manager') {
+      api.get('/api/auth/users').then((res) => setAgents(res.data.users.filter((u) => u.role === 'agent')));
+    }
   }, []);
 
   const validate = () => {
@@ -78,6 +65,7 @@ export default function LeadFormModal({ onClose, onCreated }) {
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               placeholder="10-digit phone"
+              maxLength={10}
             />
           </div>
           <div>
@@ -103,7 +91,7 @@ export default function LeadFormModal({ onClose, onCreated }) {
               placeholder="Property name"
             />
           </div>
-          {agents.length > 0 && (
+          {(user?.role === 'admin' || user?.role === 'manager') && agents.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Assign Agent</label>
               <select

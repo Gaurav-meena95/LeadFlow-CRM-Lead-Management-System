@@ -13,6 +13,7 @@ export default function VisitModal({ lead, onClose, onCreated }) {
     if (!form.property.trim()) return setError('Property is required');
     if (!form.scheduledAt) return setError('Date and time is required');
     setLoading(true);
+    setError('');
     try {
       const res = await api.post('/api/visits', {
         leadId: lead._id,
@@ -30,7 +31,7 @@ export default function VisitModal({ lead, onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl w-full max-w-md shadow-xl">
         <div className="flex items-center justify-between p-5 border-b border-slate-200">
           <h2 className="text-lg font-semibold">Schedule Visit</h2>

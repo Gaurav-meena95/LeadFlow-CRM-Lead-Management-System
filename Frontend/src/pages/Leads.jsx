@@ -20,6 +20,7 @@ export default function Leads() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const canCreate = user?.role === 'admin' || user?.role === 'manager';
 
   const fetchLeads = () => {
     setLoading(true);
@@ -37,21 +38,18 @@ export default function Leads() {
       key: 'status', label: 'Status',
       render: (r) => (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[r.status]}`}>
-          {r.status.replace('_', ' ')}
+          {r.status.replace(/_/g, ' ')}
         </span>
       )
     },
-    {
-      key: 'createdAt', label: 'Created',
-      render: (r) => new Date(r.createdAt).toLocaleDateString()
-    }
+    { key: 'createdAt', label: 'Created', render: (r) => new Date(r.createdAt).toLocaleDateString() }
   ];
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Leads</h1>
-        {(user?.role === 'admin' || user?.role === 'manager') && (
+        {canCreate && (
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium"

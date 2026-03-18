@@ -7,7 +7,7 @@ export default function DataTable({ columns, data, onRowClick }) {
         <thead>
           <tr className="bg-slate-50 border-b border-slate-200">
             {columns.map((col) => (
-              <th key={col.key} className="text-left px-4 py-3 text-slate-600 font-medium">
+              <th key={col.key} className="text-left px-4 py-3 text-slate-600 font-medium whitespace-nowrap">
                 {col.label}
               </th>
             ))}

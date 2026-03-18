@@ -11,13 +11,7 @@ export default function Agents() {
   const [loading, setLoading] = useState(false);
 
   const fetchAgents = () => {
-    api.get('/api/leads').then((r) => {
-      const map = {};
-      r.data.leads.forEach((l) => {
-        if (l.assignedAgent) map[l.assignedAgent._id] = l.assignedAgent;
-      });
-      setAgents(Object.values(map));
-    });
+    api.get('/api/auth/users').then((r) => setAgents(r.data.users));
   };
 
   useEffect(() => { fetchAgents(); }, []);

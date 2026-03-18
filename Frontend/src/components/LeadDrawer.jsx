@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Calendar, RefreshCw } from 'lucide-react';
+import { X, Calendar, RefreshCw, UserCheck } from 'lucide-react';
 import api from '../services/api';
 import VisitModal from './VisitModal';
 
@@ -15,14 +15,23 @@ const statusColors = {
 const statuses = ['new', 'contacted', 'visit_scheduled', 'visit_done', 'booked', 'lost'];
 
 export default function LeadDrawer({ lead, onClose, onUpdate }) {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const canAssign = user?.role === 'admin' || user?.role === 'manager';
+
   const [visits, setVisits] = useState([]);
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [status, setStatus] = useState(lead.status);
   const [saving, setSaving] = useState(false);
+  const [agents, setAgents] = useState([]);
+  const [assignedAgent, setAssignedAgent] = useState(lead.assignedAgent?._id || '');
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     api.get(`/api/visits?leadId=${lead._id}`).then((r) => setVisits(r.data.visits));
-  }, [lead._id]);
+    if (canAssign) {
+      api.get('/api/auth/users').then((r) => setAgents(r.data.users.filter((u) => u.role === 'agent')));
+    }
+  }, [lead._id, canAssign]);
 
   const handleStatusChange = async (newStatus) => {
     setSaving(true);
@@ -32,6 +41,17 @@ export default function LeadDrawer({ lead, onClose, onUpdate }) {
       onUpdate(res.data.lead);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!assignedAgent) return;
+    setAssigning(true);
+    try {
+      const res = await api.patch(`/api/leads/${lead._id}`, { assignedAgent });
+      onUpdate(res.data.lead);
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -56,7 +76,7 @@ export default function LeadDrawer({ lead, onClose, onUpdate }) {
               Agent: {lead.assignedAgent?.name || 'Unassigned'}
             </p>
             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}>
-              {status.replace('_', ' ')}
+              {status.replace(/_/g, ' ')}
             </span>
           </div>
 
@@ -76,11 +96,38 @@ export default function LeadDrawer({ lead, onClose, onUpdate }) {
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  {s.replace('_', ' ')}
+                  {s.replace(/_/g, ' ')}
                 </button>
               ))}
             </div>
           </div>
+
+          {canAssign && agents.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <UserCheck size={14} /> Assign Agent
+              </p>
+              <div className="flex gap-2">
+                <select
+                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={assignedAgent}
+                  onChange={(e) => setAssignedAgent(e.target.value)}
+                >
+                  <option value="">Select agent</option>
+                  {agents.map((a) => (
+                    <option key={a._id} value={a._id}>{a.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleAssign}
+                  disabled={assigning || !assignedAgent}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {assigning ? 'Saving...' : 'Assign'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div>
             <p className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">

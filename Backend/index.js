@@ -19,10 +19,9 @@ connectDB();
 app.get('/', (req, res) => res.status(200).json('LeadFlow CRM API'));
 
 app.use('/api/auth', authRoutes);
-app.use(verifyUserMiddleware);
-app.use('/api/leads', leadsRoutes);
-app.use('/api/visits', visitsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/leads', leadsRoutes); 
+app.use('/api/visits', verifyUserMiddleware, visitsRoutes);
+app.use('/api/dashboard', verifyUserMiddleware, dashboardRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
